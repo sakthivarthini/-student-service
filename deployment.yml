@@ -1,0 +1,38 @@
+stages:
+  - stage: Generate_K0s_Deployment_YAML
+    steps:
+      - script:
+          name: Generate K0s Deployment YAML
+          code: |
+            def deploymentYamlContent = """
+            apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: poojaimages
+            spec:
+              replicas: 1
+              selector:
+                matchLabels:
+                  app: poojaimages
+              template:
+                metadata:
+                  labels:
+                    app: poojaimages
+                spec:
+                  containers:
+                    - name: student-service
+                      image: \${NEXUS_DOCKER_REPO}/Poojaimages:1.0.4
+                      ports:
+                        - containerPort: 8086
+            """
+            writeFile file: 'k0s-deployment.yaml', text: deploymentYamlContent
+
+    post:
+      success:
+        steps:
+          - archiveArtifacts:
+              artifacts: 'k0s-deployment.yaml'
+              onlyIfSuccessful: true
+          - archiveArtifacts:
+              artifacts: 'service-deployment.yaml'
+              allowEmptyArchive: true
